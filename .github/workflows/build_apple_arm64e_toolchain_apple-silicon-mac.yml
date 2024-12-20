@@ -9,25 +9,13 @@ jobs:
   build:
     runs-on: macos-14
     env:
-      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout Fork Repository
+      - name: Checkout
         uses: actions/checkout@v4.1.6
         with:
-          repository: "Fl0rk/Hikari-LLVM15" # Repo của bạn
-          ref: "apple-arm64e-upstream-next" # Nhánh fork
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-
-      - name: Add Upstream Repository
-        run: |
-          git remote add upstream https://github.com/61bcdefg/Hikari-LLVM15.git
-          git fetch upstream apple-arm64e-upstream-next
-          git checkout upstream/apple-arm64e-upstream-next
-
-      - name: Debug Git Remote
-        run: |
-          git remote -v
-          git branch -a
+          ref: "apple-arm64e-upstream-next"
+          submodules: "recursive"
 
       - name: Setup python
         uses: actions/setup-python@v5
@@ -39,17 +27,17 @@ jobs:
         run: |
           brew install cmake
           brew install ninja
-
+      
       - name: Build
         shell: bash
         run: |
           mkdir build
           cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DLLVM_ENABLE_PROJECTS=clang  -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_ENABLE_ZSTD=OFF -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DLLVM_CREATE_XCODE_TOOLCHAIN=ON  -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_UTILS=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -LLVM_BUILD_TOOLS=OFF -LLVM_INSTALL_TOOLCHAIN_ONLY=ON -DCMAKE_INSTALL_PREFIX="./install" ../llvm
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DLLVM_ENABLE_PROJECTS=clang  -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_ENABLE_ZSTD=OFF -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DLLVM_CREATE_XCODE_TOOLCHAIN=ON  -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_UTILS=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_BUILD_TOOLS=OFF -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON -DCMAKE_INSTALL_PREFIX="./install" ../llvm
           ninja
           ninja install-xcode-toolchain
           tar -czvf Hikari_LLVM19.0.0git_Apple-Silicon-Mac.tar.gz ./install/Toolchains/Hikari_LLVM19.0.0git.xctoolchain
-
+  
       - name: Upload Artifact
         uses: actions/upload-artifact@v4.3.3
         with:
